@@ -18,9 +18,10 @@
   function createCover(target) {
     if (target.querySelector(".reply-guard-cover")) return;
 
+    const isIconButton = target.tagName === "BUTTON";
     const cover = document.createElement("div");
     cover.className = "reply-guard-cover";
-    cover.textContent = "\u{1F512} Guarded";
+    cover.textContent = isIconButton ? "\u{1F512}" : "\u{1F512} Guarded";
     cover.title = "This conversation is guarded. Click to reveal.";
 
     cover.addEventListener("click", (e) => {
