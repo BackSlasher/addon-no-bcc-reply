@@ -1,4 +1,4 @@
-.bcc-guard-cover {
+.reply-guard-cover {
   position: absolute;
   top: 0;
   left: 0;
@@ -22,6 +22,6 @@
   box-sizing: border-box;
 }
 
-.bcc-guard-cover:hover {
+.reply-guard-cover:hover {
   background: #b3261e;
 }

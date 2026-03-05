@@ -1,30 +1,27 @@
 (() => {
-  const GUARD_ATTR = "data-bcc-guard";
-  const PROCESSED_ATTR = "data-bcc-guard-processed";
+  const LABEL_NAME = "Reply Guard";
+  const GUARD_ATTR = "data-reply-guard";
+  const PROCESSED_ATTR = "data-reply-guard-processed";
 
-  function isBccMessage(messageEl) {
-    // Look for text containing "bcc:" in the message header area
-    const walker = document.createTreeWalker(
-      messageEl,
-      NodeFilter.SHOW_TEXT,
-      {
-        acceptNode(node) {
-          return /\bbcc:/i.test(node.textContent)
-            ? NodeFilter.FILTER_ACCEPT
-            : NodeFilter.FILTER_REJECT;
-        },
-      }
-    );
-    return !!walker.nextNode();
+  function hasGuardLabel(container) {
+    // Gmail label chips are div.hN[role="button"] with an aria-label like
+    // "Search for all messages with label <name>"
+    const labels = container.querySelectorAll('div.hN[role="button"]');
+    for (const label of labels) {
+      const aria = label.getAttribute("aria-label") || "";
+      if (aria.includes(LABEL_NAME)) return true;
+      if (label.textContent.trim() === LABEL_NAME) return true;
+    }
+    return false;
   }
 
   function createCover(target) {
-    if (target.querySelector(`.bcc-guard-cover`)) return;
+    if (target.querySelector(".reply-guard-cover")) return;
 
     const cover = document.createElement("div");
-    cover.className = "bcc-guard-cover";
-    cover.textContent = "\u{1F512} BCC";
-    cover.title = "You are BCC\u2019d on this email. Click to reveal.";
+    cover.className = "reply-guard-cover";
+    cover.textContent = "\u{1F512} Guarded";
+    cover.title = "This conversation is guarded. Click to reveal.";
 
     cover.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -32,7 +29,6 @@
       cover.remove();
     });
 
-    // Position cover inside the target element itself — no wrapping
     target.style.position = "relative";
     target.appendChild(cover);
   }
@@ -57,31 +53,44 @@
   }
 
   function processMessages() {
-    // Gmail messages are role="listitem" elements
-    const messages = document.querySelectorAll('[role="listitem"]');
+    // The label chip lives on the conversation view, not per-message.
+    // Walk up from role="list" (message list) to find the label chip,
+    // then guard all reply buttons within.
+    const messageLists = document.querySelectorAll('[role="list"]');
 
-    for (const msg of messages) {
-      if (msg.hasAttribute(PROCESSED_ATTR)) continue;
-      msg.setAttribute(PROCESSED_ATTR, "true");
+    for (const list of messageLists) {
+      // Check ancestors for the label chip
+      let container = list.parentElement;
+      let found = false;
+      for (let i = 0; i < 10 && container; i++) {
+        if (hasGuardLabel(container)) {
+          found = true;
+          break;
+        }
+        container = container.parentElement;
+      }
+      if (!found) continue;
 
-      if (!isBccMessage(msg)) continue;
-      msg.setAttribute(GUARD_ATTR, "true");
+      // Guard reply buttons in individual messages
+      const messages = list.querySelectorAll('[role="listitem"]');
+      for (const msg of messages) {
+        if (msg.hasAttribute(PROCESSED_ATTR)) continue;
+        msg.setAttribute(PROCESSED_ATTR, "true");
+        msg.setAttribute(GUARD_ATTR, "true");
 
-      const replyButtons = findReplyButtons(msg);
-      for (const btn of replyButtons) {
-        createCover(btn);
+        const replyButtons = findReplyButtons(msg);
+        for (const btn of replyButtons) {
+          createCover(btn);
+        }
       }
     }
 
-    // Also check for bottom reply buttons that live outside the listitem
-    // (they're siblings in a parent container)
-    // Walk up from any guarded listitem to find nearby reply links
+    // Bottom reply buttons live outside the listitem — walk up from
+    // guarded messages to find them
     const guardedMessages = document.querySelectorAll(
       `[role="listitem"][${GUARD_ATTR}]`
     );
     for (const msg of guardedMessages) {
-      // The bottom Reply/Forward buttons are in a sibling div within
-      // a shared ancestor (~4 levels up from the listitem)
       let ancestor = msg.parentElement;
       for (let i = 0; i < 5 && ancestor; i++) {
         const links = ancestor.querySelectorAll('span[role="link"]');
@@ -89,7 +98,7 @@
           const text = link.textContent.trim();
           if (
             (text === "Reply" || text === "Reply all") &&
-            !link.querySelector(".bcc-guard-cover")
+            !link.querySelector(".reply-guard-cover")
           ) {
             createCover(link);
           }

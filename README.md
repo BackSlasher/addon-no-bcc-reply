@@ -1,8 +1,16 @@
-# BCC Reply Guard
+# Reply Guard
 
-A browser extension for Gmail that prevents accidental replies when you're BCC'd on an email.
+A browser extension for Gmail that guards reply buttons on labeled conversations.
 
-When you're BCC'd, replying exposes that you received the email. This extension overlays a small cover on Reply and Reply All buttons. Click the cover to dismiss it, then reply normally.
+When a conversation has the **Reply Guard** label, the Reply and Reply All buttons are covered with a shield. Click the shield to dismiss it, then reply normally.
+
+Useful for BCC'd emails, sensitive threads, or any conversation where you want a deliberate extra step before replying.
+
+## Setup
+
+1. In Gmail, create a label called **Reply Guard**
+2. To auto-label BCC emails: go to Settings > Filters > Create filter, set "To" to `-me`, check "Apply label: Reply Guard" (adjust as needed for your use case)
+3. Install the extension (see below)
 
 ## Install
 
@@ -32,6 +40,6 @@ To update: pull/download the latest version, then click the reload icon on the e
 ## How it works
 
 - Runs a content script on `mail.google.com`
-- Watches for email messages via a MutationObserver
-- When a message header contains "bcc:", overlays a red cover on the Reply / Reply All buttons
+- Watches for conversation views via a MutationObserver
+- If the conversation has a "Reply Guard" label chip, overlays a cover on Reply / Reply All buttons
 - Click the cover to dismiss it, then use the button normally

@@ -1,11 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "BCC Reply Guard",
+  "name": "Reply Guard",
   "version": "1.0.0",
-  "description": "Prevents accidental replies when you're BCC'd on an email in Gmail",
+  "description": "Guards reply buttons on Gmail conversations with the 'Reply Guard' label",
   "browser_specific_settings": {
     "gecko": {
-      "id": "bcc-reply-guard@nitz"
+      "id": "reply-guard@nitz"
     }
   },
   "content_scripts": [
